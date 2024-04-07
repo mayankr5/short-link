@@ -8,6 +8,7 @@ import (
 )
 
 type User struct {
+	gorm.Model
 	ID        uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
 	Name      string    `json:"name"`
 	Email     string    `json:"email"`
@@ -17,13 +18,13 @@ type User struct {
 }
 
 type UserURLs struct {
+	gorm.Model
 	ID          uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
-	OriginalURL string    `json:"original_url"`
-	ShortURL    string    `json:"short_url"`
-	Visiter     int       `json:"visiter"`
+	OriginalURL string    `gorm:"unique" json:"original_url"`
+	ShortURL    string    `gorm:"unique" json:"short_url"`
+	Visiter     int       `gorm:"default:0" json:"visiter"`
 	UserID      uuid.UUID `json:"user_id"`
 	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
 	User        User      `gorm:"foreignKey:UserID"`
 }
 

@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"os"
 
+	"github.com/google/uuid"
 	"github.com/itchyny/base58-go"
 )
 
@@ -25,8 +26,8 @@ func base58Encoded(bytes []byte) string {
 	return string(encoded)
 }
 
-func GenerateShortLink(initialLink string, userId string) string {
-	urlHashBytes := sha256Of(initialLink + userId)
+func GenerateShortLink(initialLink string, userId uuid.UUID) string {
+	urlHashBytes := sha256Of(initialLink + userId.String())
 	generatedNumber := new(big.Int).SetBytes(urlHashBytes).Uint64()
 	finalString := base58Encoded([]byte(fmt.Sprintf("%d", generatedNumber)))
 	return finalString[:8]

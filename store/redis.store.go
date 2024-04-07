@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis"
+	"github.com/google/uuid"
 )
 
 type StorageService struct {
@@ -34,7 +35,7 @@ func InitializeStore() *StorageService {
 	return storeService
 }
 
-func SaveUrlMapping(shortUrl string, originalUrl string, userId string) {
+func SaveUrlMapping(shortUrl string, originalUrl string, userId uuid.UUID) {
 	err := storeService.redisClient.Set(shortUrl, originalUrl, CacheDuration).Err()
 	if err != nil {
 		panic(fmt.Sprintf("Failed saving key url | Error: %v - shortUrl: %s - originalUrl: %s\n", err, shortUrl, originalUrl))
