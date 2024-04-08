@@ -20,7 +20,7 @@ const (
 	port     = 5432
 	user     = "mayank"
 	password = "123"
-	dbname   = "url-shortner"
+	dbname   = "url_shortner"
 )
 
 func Connect() error {

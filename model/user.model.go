@@ -11,8 +11,9 @@ type User struct {
 	gorm.Model
 	ID        uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
 	Name      string    `json:"name"`
-	Email     string    `json:"email"`
-	Username  string    `json:"username"`
+	Email     string    `gorm:"unique;not null" json:"email"`
+	Username  string    `gorm:"unique;not null" json:"username"`
+	Password  string    `validate:"min=8" json:"password"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -31,9 +32,8 @@ type UserURLs struct {
 type AuthToken struct {
 	gorm.Model
 	ID        uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
-	Token     string    `gorm:"unique" json:"token"`
+	Token     string    `gorm:"unique;not null" json:"token"`
 	UserID    uuid.UUID `json:"user_id"`
 	User      User      `gorm:"foreignKey:UserID"`
 	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
 }

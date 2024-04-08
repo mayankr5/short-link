@@ -15,5 +15,6 @@ func main() {
 	routes.SetupRoutes(app)
 
 	store.InitializeStore()
+	store.Connect()
 	app.Listen(":3000")
 }

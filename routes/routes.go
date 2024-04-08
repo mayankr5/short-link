@@ -8,7 +8,7 @@ import (
 
 func SetupRoutes(app *fiber.App) {
 	app.Post("/login", handler.Login)
-
+	app.Post("/signup", handler.Signup)
 	app.Post("/create-short-url", middleware.Authentication, handler.CreateShortUrl)
 	app.Get("/:shortUrl", handler.HandleShortUrlRedirect)
 }

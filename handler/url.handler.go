@@ -20,12 +20,16 @@ type UserURLs struct {
 	UserID      uuid.UUID `json:"user_id"`
 }
 
+func GetUrls(c *fiber.Ctx) error {
+	return nil
+}
+
 func CreateShortUrl(c *fiber.Ctx) error {
 	var creationRequest UrlCreationRequest
 	if err := c.BodyParser(&creationRequest); err != nil {
 		return c.JSON(fiber.Map{
 			"error":  err.Error(),
-			"status": 400,
+			"status": fiber.StatusBadRequest,
 		})
 	}
 

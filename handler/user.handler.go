@@ -1,8 +1,11 @@
 package handler
 
 import (
+	"strings"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/mayankr5/url_shortner/store"
 	"github.com/mayankr5/url_shortner/utils"
 )
 
@@ -12,10 +15,16 @@ type LoginRequest struct {
 }
 
 type User struct {
-	ID       uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
+	ID       uuid.UUID `json:"id"`
 	Name     string    `json:"name"`
 	Email    string    `json:"email"`
 	Username string    `json:"username"`
+}
+
+type AuthToken struct {
+	ID     uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
+	Token  string    `gorm:"unique" json:"token"`
+	UserID uuid.UUID `json:"user_id"`
 }
 
 func Login(c *fiber.Ctx) error {
@@ -23,19 +32,104 @@ func Login(c *fiber.Ctx) error {
 	if err := c.BodyParser(&userCredential); err != nil {
 		return c.JSON(fiber.Map{
 			"error":  err.Error(),
-			"status": 400,
+			"status": fiber.StatusBadRequest,
+		})
+	}
+	var user User
+
+	if err := store.DB.Db.Where("Username = ? AND Password = ?", userCredential.Username, userCredential.Password).Find(&user); err != nil {
+		return c.JSON(fiber.Map{
+			"status": fiber.StatusNotFound,
+			"error":  "User Not Found",
 		})
 	}
 
-	// verify user and get user detail
-	var user User
-
 	token := utils.GenerateToken(utils.User(user))
-	// Save token with user detail
+
+	auth_token := AuthToken{
+		ID:     uuid.New(),
+		Token:  token,
+		UserID: user.ID,
+	}
+
+	if err := store.DB.Db.Create(&auth_token); err != nil {
+		return c.JSON(fiber.Map{
+			"status":  fiber.StatusNotImplemented,
+			"message": "internal error",
+		})
+	}
 
 	return c.JSON(fiber.Map{
-		"status":  200,
+		"status":  fiber.StatusOK,
 		"message": "user login",
 		"token":   token,
+	})
+}
+
+func Signup(c *fiber.Ctx) error {
+	var user User
+	if err := c.BodyParser(&user); err != nil {
+		return c.JSON(fiber.Map{
+			"status": fiber.StatusBadRequest,
+			"error":  err.Error(),
+		})
+	}
+	user.ID = uuid.New()
+
+	if err := store.DB.Db.Create(&user); err != nil {
+		return c.JSON(fiber.Map{
+			"status": fiber.StatusInternalServerError,
+			"error":  err.Error,
+		})
+	}
+
+	token := utils.GenerateToken(utils.User(user))
+
+	auth_token := AuthToken{
+		ID:     uuid.New(),
+		Token:  token,
+		UserID: user.ID,
+	}
+
+	if err := store.DB.Db.Create(&auth_token); err != nil {
+		return c.JSON(fiber.Map{
+			"status":  fiber.StatusNotImplemented,
+			"message": "internal error",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"status":  fiber.StatusCreated,
+		"message": "user registered",
+		"token":   token,
+	})
+}
+
+func Logout(c *fiber.Ctx) error {
+	accessToken := c.Cookies("accessToken")
+
+	if accessToken == "" {
+		accessToken = c.Get("Authorization", "")
+		if accessToken != "" {
+			accessToken = strings.TrimPrefix(accessToken, "Bearer ")
+		} else {
+			return c.JSON(fiber.Map{
+				"status":  fiber.StatusUnauthorized,
+				"message": "Missing token",
+			})
+		}
+	}
+
+	var auth_token AuthToken
+	if err := store.DB.Db.Where("token = ?", accessToken).Delete(&auth_token); err != nil {
+		return c.JSON(fiber.Map{
+			"status": fiber.StatusNotFound,
+			"error":  err.Error,
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"status":  fiber.StatusOK,
+		"message": "user logout",
 	})
 }
