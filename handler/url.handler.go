@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"fmt"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/mayankr5/url_shortner/store"
@@ -91,11 +89,17 @@ func HandleShortUrlRedirect(c *fiber.Ctx) error {
 	}
 
 	var userUrl UserURLs
-	result := store.DB.Db.Where("short_url = ?", shortUrl).First(&userUrl)
+	result := store.DB.Db.Where("short_url = ?", "http://localhost:3000/"+shortUrl).First(&userUrl)
+
+	if result.RowsAffected == 0 {
+		return c.JSON(fiber.Map{
+			"status":  fiber.StatusNotImplemented,
+			"message": result.Error,
+		})
+	}
 
 	userUrl.Visiter = userUrl.Visiter + 1
-	fmt.Print(userUrl)
-	store.DB.Db.Save(&userUrl)
+	result = store.DB.Db.Save(&userUrl)
 
 	if result.RowsAffected == 0 {
 		return c.JSON(fiber.Map{

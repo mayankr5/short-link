@@ -28,6 +28,13 @@ type AuthToken struct {
 	UserID uuid.UUID `json:"user_id"`
 }
 
+type UserResponse struct {
+	ID       uuid.UUID `json:"id"`
+	Name     string    `json:"name"`
+	Email    string    `json:"email"`
+	Username string    `json:"username"`
+}
+
 func Login(c *fiber.Ctx) error {
 	var userCredential LoginRequest
 	if err := c.BodyParser(&userCredential); err != nil {
@@ -51,7 +58,14 @@ func Login(c *fiber.Ctx) error {
 		})
 	}
 
-	token := utils.GenerateToken(utils.User(user))
+	userRes := UserResponse{
+		ID:       user.ID,
+		Username: user.Username,
+		Name:     user.Name,
+		Email:    user.Email,
+	}
+
+	token := utils.GenerateToken(utils.User(userRes))
 
 	auth_token := AuthToken{
 		ID:     uuid.New(),
@@ -59,7 +73,7 @@ func Login(c *fiber.Ctx) error {
 		UserID: user.ID,
 	}
 
-	if err := store.DB.Db.Create(&auth_token); err != nil {
+	if err := store.DB.Db.Create(&auth_token); err.Error != nil {
 		return c.JSON(fiber.Map{
 			"status": fiber.StatusNotImplemented,
 			"error":  err.Error,
@@ -70,6 +84,7 @@ func Login(c *fiber.Ctx) error {
 		"status":  fiber.StatusOK,
 		"message": "user login",
 		"token":   token,
+		"user":    userRes,
 	})
 }
 
@@ -83,14 +98,20 @@ func Signup(c *fiber.Ctx) error {
 	}
 	user.ID = uuid.New()
 
-	if err := store.DB.Db.Create(&user); err != nil {
+	if err := store.DB.Db.Create(&user); err.Error != nil {
 		return c.JSON(fiber.Map{
 			"status": fiber.StatusInternalServerError,
 			"error":  err.Error,
 		})
 	}
+	userRes := UserResponse{
+		ID:       user.ID,
+		Username: user.Username,
+		Name:     user.Name,
+		Email:    user.Email,
+	}
 
-	token := utils.GenerateToken(utils.User(user))
+	token := utils.GenerateToken(utils.User(userRes))
 
 	auth_token := AuthToken{
 		ID:     uuid.New(),
@@ -98,7 +119,7 @@ func Signup(c *fiber.Ctx) error {
 		UserID: user.ID,
 	}
 
-	if err := store.DB.Db.Create(&auth_token); err != nil {
+	if err := store.DB.Db.Create(&auth_token); err.Error != nil {
 		return c.JSON(fiber.Map{
 			"status":  fiber.StatusNotImplemented,
 			"message": "internal error",
@@ -109,6 +130,7 @@ func Signup(c *fiber.Ctx) error {
 		"status":  fiber.StatusCreated,
 		"message": "user registered",
 		"token":   token,
+		"user":    userRes,
 	})
 }
 
