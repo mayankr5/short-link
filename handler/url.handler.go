@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/mayankr5/url_shortner/store"
@@ -13,15 +15,11 @@ type UrlCreationRequest struct {
 }
 
 type UserURLs struct {
-	ID          uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
-	OriginalURL string    `gorm:"unique" json:"original_url"`
-	ShortURL    string    `gorm:"unique" json:"short_url"`
+	ID          uuid.UUID `json:"id"`
+	OriginalURL string    `json:"original_url"`
+	ShortURL    string    `json:"short_url"`
 	Visiter     int       `json:"visiter"`
 	UserID      uuid.UUID `json:"user_id"`
-}
-
-func GetUrls(c *fiber.Ctx) error {
-	return nil
 }
 
 func CreateShortUrl(c *fiber.Ctx) error {
@@ -36,10 +34,12 @@ func CreateShortUrl(c *fiber.Ctx) error {
 	shortUrl := utils.GenerateShortLink(creationRequest.OriginalURL, creationRequest.UserId)
 	store.SaveUrlMapping(shortUrl, creationRequest.OriginalURL, creationRequest.UserId)
 
+	host := "http://localhost:3000/"
+
 	userURL := UserURLs{
 		ID:          uuid.New(),
 		OriginalURL: creationRequest.OriginalURL,
-		ShortURL:    shortUrl,
+		ShortURL:    host + shortUrl,
 		UserID:      creationRequest.UserId,
 	}
 
@@ -52,7 +52,6 @@ func CreateShortUrl(c *fiber.Ctx) error {
 		})
 	}
 
-	host := "http://localhost:3000/"
 	return c.JSON(fiber.Map{
 		"status":    fiber.StatusOK,
 		"message":   "short url created successfully",
@@ -61,14 +60,41 @@ func CreateShortUrl(c *fiber.Ctx) error {
 
 }
 
+func GetURLs(c *fiber.Ctx) error {
+	var userURLs []UserURLs
+	result := store.DB.Db.Where("user_id = ?", c.Locals("userID")).Find(&userURLs)
+
+	if result.Error != nil {
+		return c.JSON(fiber.Map{
+			"status": fiber.StatusNotImplemented,
+			"error":  result.Error,
+		})
+	} else if result.RowsAffected == 0 {
+		return c.JSON(fiber.Map{
+			"status": fiber.StatusNotFound,
+			"error":  result.Error,
+		})
+	}
+
+	return c.JSON(userURLs)
+}
+
 func HandleShortUrlRedirect(c *fiber.Ctx) error {
 	shortUrl := c.Params("shortUrl")
-	initialUrl := store.RetrieveInitialUrl(shortUrl)
+	initialUrl, err := store.RetrieveInitialUrl(shortUrl)
+	if err != nil {
+		return c.JSON(fiber.Map{
+			"status":  fiber.StatusNotFound,
+			"message": "Link is Invalid",
+			"error":   err,
+		})
+	}
+
 	var userUrl UserURLs
-	result := store.DB.Db.Where("shorturl = ?", shortUrl).Find(&userUrl)
+	result := store.DB.Db.Where("short_url = ?", shortUrl).First(&userUrl)
 
 	userUrl.Visiter = userUrl.Visiter + 1
-
+	fmt.Print(userUrl)
 	store.DB.Db.Save(&userUrl)
 
 	if result.RowsAffected == 0 {

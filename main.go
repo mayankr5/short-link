@@ -16,5 +16,6 @@ func main() {
 
 	store.InitializeStore()
 	store.Connect()
+
 	app.Listen(":3000")
 }

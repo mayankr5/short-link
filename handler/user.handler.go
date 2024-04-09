@@ -19,6 +19,7 @@ type User struct {
 	Name     string    `json:"name"`
 	Email    string    `json:"email"`
 	Username string    `json:"username"`
+	Password string    `json:"password"`
 }
 
 type AuthToken struct {
@@ -37,10 +38,16 @@ func Login(c *fiber.Ctx) error {
 	}
 	var user User
 
-	if err := store.DB.Db.Where("Username = ? AND Password = ?", userCredential.Username, userCredential.Password).Find(&user); err != nil {
+	result := store.DB.Db.Where("Username = ? AND Password = ?", userCredential.Username, userCredential.Password).Find(&user)
+	if result.Error != nil {
+		return c.JSON(fiber.Map{
+			"status": fiber.StatusNotImplemented,
+			"error":  result.Error,
+		})
+	} else if result.RowsAffected == 0 {
 		return c.JSON(fiber.Map{
 			"status": fiber.StatusNotFound,
-			"error":  "User Not Found",
+			"error":  result.Error,
 		})
 	}
 
@@ -54,8 +61,8 @@ func Login(c *fiber.Ctx) error {
 
 	if err := store.DB.Db.Create(&auth_token); err != nil {
 		return c.JSON(fiber.Map{
-			"status":  fiber.StatusNotImplemented,
-			"message": "internal error",
+			"status": fiber.StatusNotImplemented,
+			"error":  err.Error,
 		})
 	}
 
@@ -121,10 +128,17 @@ func Logout(c *fiber.Ctx) error {
 	}
 
 	var auth_token AuthToken
-	if err := store.DB.Db.Where("token = ?", accessToken).Delete(&auth_token); err != nil {
+	result := store.DB.Db.Where("token = ?", accessToken).Delete(&auth_token)
+
+	if result.Error != nil {
+		return c.JSON(fiber.Map{
+			"status": fiber.StatusNotImplemented,
+			"error":  result.Error,
+		})
+	} else if result.RowsAffected == 0 {
 		return c.JSON(fiber.Map{
 			"status": fiber.StatusNotFound,
-			"error":  err.Error,
+			"error":  result.Error,
 		})
 	}
 

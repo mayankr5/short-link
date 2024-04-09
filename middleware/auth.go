@@ -22,13 +22,15 @@ func Authentication(c *fiber.Ctx) error {
 		}
 	}
 
-	_, err := utils.VerifyToken(accessToken)
+	userID, err := utils.VerifyToken(accessToken)
 	if err != nil {
 		return c.JSON(fiber.Map{
 			"status":  fiber.StatusUnauthorized,
 			"message": "Invalid token",
 		})
 	}
+
+	c.Locals("userID", userID)
 
 	return c.Next()
 }

@@ -43,10 +43,11 @@ func SaveUrlMapping(shortUrl string, originalUrl string, userId uuid.UUID) {
 
 }
 
-func RetrieveInitialUrl(shortUrl string) string {
+func RetrieveInitialUrl(shortUrl string) (string, error) {
 	result, err := storeService.redisClient.Get(shortUrl).Result()
 	if err != nil {
-		panic(fmt.Sprintf("Failed RetrieveInitialUrl url | Error: %v - shortUrl: %s\n", err, shortUrl))
+		fmt.Printf("Failed RetrieveInitialUrl url | Error: %v - shortUrl: %s\n", err, shortUrl)
+		return "", err
 	}
-	return result
+	return result, nil
 }
