@@ -10,9 +10,10 @@ import (
 
 type UrlCreationRequest struct {
 	OriginalURL string    `json:"original_url" binding:"required"`
-	UserId      uuid.UUID `json:"user_id" binding:"required"`
+	UserId      uuid.UUID `json:"user_id"`
 }
 
+// Handle Duplicate original url apis
 func CreateShortUrl(c *fiber.Ctx) error {
 	var creationRequest UrlCreationRequest
 	if err := c.BodyParser(&creationRequest); err != nil {
@@ -22,13 +23,14 @@ func CreateShortUrl(c *fiber.Ctx) error {
 			"error":   err.Error(),
 		})
 	}
+	creationRequest.UserId = c.Locals("auth_token").(model.AuthToken).UserID
 
 	shortUrl := utils.GenerateShortLink(creationRequest.OriginalURL, creationRequest.UserId)
 	store.SaveUrlMapping(shortUrl, creationRequest.OriginalURL, creationRequest.UserId)
 
 	host := "http://localhost:3000/"
 
-	userURL := model.UserURLs{
+	userURL := model.UserURL{
 		ID:          uuid.New(),
 		OriginalURL: creationRequest.OriginalURL,
 		ShortURL:    host + shortUrl,
@@ -51,7 +53,7 @@ func CreateShortUrl(c *fiber.Ctx) error {
 }
 
 func GetURLs(c *fiber.Ctx) error {
-	var userURLs []model.UserURLs
+	var userURLs []model.UserURL
 
 	auth_token := c.Locals("auth_token").(model.AuthToken)
 
@@ -76,7 +78,7 @@ func HandleShortUrlRedirect(c *fiber.Ctx) error {
 		})
 	}
 
-	var userUrl model.UserURLs
+	var userUrl model.UserURL
 	store.DB.Db.Where("short_url = ?", "http://localhost:3000/"+shortUrl).First(&userUrl)
 
 	if userUrl.ShortURL == "" {

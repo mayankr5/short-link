@@ -33,7 +33,7 @@ func Connect() error {
 	}
 
 	fmt.Println("Postgres Connnected!")
-	db.AutoMigrate(&model.User{}, &model.AuthToken{}, &model.UserURLs{})
+	db.AutoMigrate(&model.User{}, &model.AuthToken{}, &model.UserURL{})
 
 	DB = Dbinstance{
 		Db: db,
