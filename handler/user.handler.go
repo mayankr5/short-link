@@ -1,31 +1,21 @@
 package handler
 
 import (
-	"strings"
+	"errors"
+	"net/mail"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/mayankr5/url_shortner/model"
 	"github.com/mayankr5/url_shortner/store"
 	"github.com/mayankr5/url_shortner/utils"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type LoginRequest struct {
-	Username string `json:"username"`
+	Identity string `json:"Identity"`
 	Password string `json:"password"`
-}
-
-type User struct {
-	ID       uuid.UUID `json:"id"`
-	Name     string    `json:"name"`
-	Email    string    `json:"email"`
-	Username string    `json:"username"`
-	Password string    `json:"password"`
-}
-
-type AuthToken struct {
-	ID     uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
-	Token  string    `gorm:"unique" json:"token"`
-	UserID uuid.UUID `json:"user_id"`
 }
 
 type UserResponse struct {
@@ -35,75 +25,143 @@ type UserResponse struct {
 	Username string    `json:"username"`
 }
 
+func hashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
+}
+
+func CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
+}
+
+func getUserByEmail(e string) (*model.User, error) {
+	db := store.DB.Db
+	var user model.User
+	if err := db.Where(&model.User{Email: e}).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &user, nil
+}
+
+func getUserByUsername(u string) (*model.User, error) {
+	db := store.DB.Db
+	var user model.User
+	if err := db.Where(&model.User{Username: u}).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &user, nil
+}
+
+func valid(email string) bool {
+	_, err := mail.ParseAddress(email)
+	return err == nil
+}
+
 func Login(c *fiber.Ctx) error {
 	var userCredential LoginRequest
 	if err := c.BodyParser(&userCredential); err != nil {
-		return c.JSON(fiber.Map{
-			"error":  err.Error(),
-			"status": fiber.StatusBadRequest,
-		})
-	}
-	var user User
-
-	result := store.DB.Db.Where("Username = ? AND Password = ?", userCredential.Username, userCredential.Password).Find(&user)
-	if result.Error != nil {
-		return c.JSON(fiber.Map{
-			"status": fiber.StatusNotImplemented,
-			"error":  result.Error,
-		})
-	} else if result.RowsAffected == 0 {
-		return c.JSON(fiber.Map{
-			"status": fiber.StatusNotFound,
-			"error":  result.Error,
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": "error on login request",
+			"error":   err.Error(),
 		})
 	}
 
-	userRes := UserResponse{
-		ID:       user.ID,
-		Username: user.Username,
-		Name:     user.Name,
-		Email:    user.Email,
+	var userRes UserResponse
+	userModel, err := new(model.User), *new(error)
+
+	if valid(userCredential.Identity) {
+		userModel, err = getUserByEmail(userCredential.Identity)
+	} else {
+		userModel, err = getUserByUsername(userCredential.Identity)
 	}
 
-	token := utils.GenerateToken(utils.User(userRes))
-
-	auth_token := AuthToken{
-		ID:     uuid.New(),
-		Token:  token,
-		UserID: user.ID,
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "internal server error",
+			"error":   err,
+		})
+	} else if userModel == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"status":  "error",
+			"message": "invalid identity or password",
+			"data":    nil,
+		})
+	} else {
+		userRes = UserResponse{
+			ID:       userModel.ID,
+			Name:     userModel.Name,
+			Username: userModel.Username,
+			Email:    userModel.Email,
+		}
 	}
 
-	if err := store.DB.Db.Create(&auth_token); err.Error != nil {
-		return c.JSON(fiber.Map{
-			"status": fiber.StatusNotImplemented,
-			"error":  err.Error,
+	if !CheckPasswordHash(userCredential.Password, userModel.Password) {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"status":  "error",
+			"message": "invalid identity or password",
+			"data":    nil,
+		})
+	}
+
+	token, err := utils.GenerateToken(utils.User(userRes))
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "interanl server error",
+			"error":   err.Error(),
 		})
 	}
 
 	return c.JSON(fiber.Map{
-		"status":  fiber.StatusOK,
+		"status":  "success",
 		"message": "user login",
-		"token":   token,
-		"user":    userRes,
+		"data":    fiber.Map{"user": userRes, "token": token},
 	})
 }
 
+// add check whether a username or email is present in database already
 func Signup(c *fiber.Ctx) error {
-	var user User
-	if err := c.BodyParser(&user); err != nil {
-		return c.JSON(fiber.Map{
-			"status": fiber.StatusBadRequest,
-			"error":  err.Error(),
-		})
-	}
-	user.ID = uuid.New()
 
-	if err := store.DB.Db.Create(&user); err.Error != nil {
-		return c.JSON(fiber.Map{
-			"status": fiber.StatusInternalServerError,
-			"error":  err.Error,
+	var user model.User
+
+	if err := c.BodyParser(&user); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": "error on signup request",
+			"error":   err.Error(),
 		})
 	}
+
+	hash_pass, err := hashPassword(user.Password)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "internal server error",
+			"error":   err.Error(),
+		})
+	}
+
+	user.ID = uuid.New()
+	user.Password = hash_pass
+
+	if err := store.DB.Db.Create(&user).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "error on creating user",
+			"error":   err.Error(),
+		})
+	}
+
 	userRes := UserResponse{
 		ID:       user.ID,
 		Username: user.Username,
@@ -111,61 +169,34 @@ func Signup(c *fiber.Ctx) error {
 		Email:    user.Email,
 	}
 
-	token := utils.GenerateToken(utils.User(userRes))
+	token, err := utils.GenerateToken(utils.User(userRes))
 
-	auth_token := AuthToken{
-		ID:     uuid.New(),
-		Token:  token,
-		UserID: user.ID,
-	}
-
-	if err := store.DB.Db.Create(&auth_token); err.Error != nil {
-		return c.JSON(fiber.Map{
-			"status":  fiber.StatusNotImplemented,
-			"message": "internal error",
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "error on token generation",
+			"error":   err.Error(),
 		})
 	}
 
-	return c.JSON(fiber.Map{
-		"status":  fiber.StatusCreated,
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"status":  "success",
 		"message": "user registered",
-		"token":   token,
-		"user":    userRes,
+		"data": fiber.Map{
+			"user":  userRes,
+			"token": token,
+		},
 	})
 }
 
 func Logout(c *fiber.Ctx) error {
-	accessToken := c.Cookies("accessToken")
 
-	if accessToken == "" {
-		accessToken = c.Get("Authorization", "")
-		if accessToken != "" {
-			accessToken = strings.TrimPrefix(accessToken, "Bearer ")
-		} else {
-			return c.JSON(fiber.Map{
-				"status":  fiber.StatusUnauthorized,
-				"message": "Missing token",
-			})
-		}
-	}
-
-	var auth_token AuthToken
-	result := store.DB.Db.Where("token = ?", accessToken).Delete(&auth_token)
-
-	if result.Error != nil {
-		return c.JSON(fiber.Map{
-			"status": fiber.StatusNotImplemented,
-			"error":  result.Error,
-		})
-	} else if result.RowsAffected == 0 {
-		return c.JSON(fiber.Map{
-			"status": fiber.StatusNotFound,
-			"error":  result.Error,
-		})
-	}
+	auth_token := c.Locals("auth_token").(model.AuthToken)
+	store.DB.Db.Delete(&auth_token)
 
 	return c.JSON(fiber.Map{
-		"status":  fiber.StatusOK,
+		"status":  "success",
 		"message": "user logout",
+		"data":    nil,
 	})
 }

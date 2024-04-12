@@ -1,11 +1,25 @@
 package middleware
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/mayankr5/url_shortner/utils"
+	"github.com/mayankr5/url_shortner/model"
+	"github.com/mayankr5/url_shortner/store"
+	"gorm.io/gorm"
 )
+
+func getToken(accessToken string) (*model.AuthToken, error) {
+	auth_token := new(model.AuthToken)
+	if err := store.DB.Db.Where("token = ?", accessToken).First(&auth_token).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return auth_token, nil
+}
 
 func Authentication(c *fiber.Ctx) error {
 	accessToken := c.Cookies("accessToken")
@@ -16,21 +30,30 @@ func Authentication(c *fiber.Ctx) error {
 			accessToken = strings.TrimPrefix(accessToken, "Bearer ")
 		} else {
 			return c.JSON(fiber.Map{
-				"status":  fiber.StatusUnauthorized,
-				"message": "Missing token",
+				"status":  "error",
+				"message": "missing token",
+				"error":   "token not found",
 			})
 		}
 	}
 
-	userID, err := utils.VerifyToken(accessToken)
+	auth_token, err := getToken(accessToken)
+
 	if err != nil {
-		return c.JSON(fiber.Map{
-			"status":  fiber.StatusUnauthorized,
-			"message": "Invalid token",
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "internal server error",
+			"error":   err,
+		})
+	} else if auth_token == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"status":  "error",
+			"message": "invalid token",
+			"data":    nil,
 		})
 	}
 
-	c.Locals("userID", userID)
+	c.Locals("auth_token", *auth_token)
 
 	return c.Next()
 }

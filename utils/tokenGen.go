@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/mayankr5/url_shortner/model"
+	"github.com/mayankr5/url_shortner/store"
 )
 
 type User struct {
@@ -15,13 +17,31 @@ type User struct {
 	Username string    `json:"username"`
 }
 
-func GenerateToken(user User) string {
+func insertToken(auth_token *model.AuthToken) error {
+	db := store.DB.Db
 
-	// Need To add secret key in this
+	if err := db.Create(&auth_token).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func GenerateToken(user User) (string, error) {
+
 	s := user.ID.String() + user.Username + user.Email + time.Now().Format("2006-01-02 15:04:05")
 	h := sha1.New()
 	h.Write([]byte(s))
 	tokenString := hex.EncodeToString(h.Sum(nil))
 
-	return tokenString
+	auth_token := model.AuthToken{
+		ID:     uuid.New(),
+		Token:  tokenString,
+		UserID: user.ID,
+	}
+
+	if err := insertToken(&auth_token); err != nil {
+		return "", err
+	}
+
+	return auth_token.Token, nil
 }
