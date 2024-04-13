@@ -142,6 +142,36 @@ func Signup(c *fiber.Ctx) error {
 		})
 	}
 
+	userModel, err := new(model.User), *new(error)
+	userModel, err = getUserByEmail(user.Email)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "internal server error",
+			"error":   err,
+		})
+	} else if userModel != nil {
+		return c.Status(fiber.StatusConflict).JSON(fiber.Map{
+			"status":  "error",
+			"message": "duplicate user error",
+			"error":   "email is already present",
+		})
+	}
+	userModel, err = getUserByUsername(user.Username)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "internal server error",
+			"error":   err,
+		})
+	} else if userModel != nil {
+		return c.Status(fiber.StatusConflict).JSON(fiber.Map{
+			"status":  "error",
+			"message": "duplicate user error",
+			"error":   "username is already present",
+		})
+	}
+
 	hash_pass, err := hashPassword(user.Password)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
