@@ -69,16 +69,33 @@ func CreateShortUrl(c *fiber.Ctx) error {
 }
 
 func GetURLs(c *fiber.Ctx) error {
+
+	type ResponseData struct {
+		ID          uuid.UUID `json:"id"`
+		OriginalURL string    `json:"original_url"`
+		ShortURL    string    `json:"short_url"`
+		Visiter     int       `json:"visiter"`
+	}
 	var userURLs []model.UserURL
+	var responseData []ResponseData
 
 	auth_token := c.Locals("auth_token").(model.AuthToken)
 
 	store.DB.Db.Where("user_id = ?", auth_token.UserID).Find(&userURLs)
 
+	for _, userURL := range userURLs {
+		res := ResponseData{
+			ID:          userURL.ID,
+			OriginalURL: userURL.OriginalURL,
+			ShortURL:    userURL.ShortURL,
+			Visiter:     userURL.Visiter,
+		}
+		responseData = append(responseData, res)
+	}
 	return c.JSON(fiber.Map{
 		"status":  "success",
 		"message": "user URL's",
-		"data":    userURLs,
+		"data":    responseData,
 	})
 }
 
