@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/mayankr5/url_shortner/model"
@@ -9,11 +11,11 @@ import (
 )
 
 type UrlCreationRequest struct {
-	OriginalURL string    `json:"original_url" binding:"required"`
-	UserId      uuid.UUID `json:"user_id"`
+	OriginalURL    string    `json:"original_url" binding:"required"`
+	UserId         uuid.UUID `json:"user_id"`
+	ExpirationDate string    `json:"expiration_date"`
 }
 
-// Handle Duplicate original url apis
 func CreateShortUrl(c *fiber.Ctx) error {
 	var creationRequest UrlCreationRequest
 	if err := c.BodyParser(&creationRequest); err != nil {
@@ -24,9 +26,23 @@ func CreateShortUrl(c *fiber.Ctx) error {
 		})
 	}
 	creationRequest.UserId = c.Locals("auth_token").(model.AuthToken).UserID
+	cacheDuration, err := time.Parse(time.RFC3339, creationRequest.ExpirationDate)
+	if err != nil {
+		c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Send Time in correct format",
+			"error":   err,
+		})
+	}
 
 	shortUrl := utils.GenerateShortLink(creationRequest.OriginalURL, creationRequest.UserId)
-	store.SaveUrlMapping(shortUrl, creationRequest.OriginalURL, creationRequest.UserId)
+	if err := store.SaveUrlMapping(shortUrl, creationRequest.OriginalURL, creationRequest.UserId, cacheDuration); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "error on redis storage",
+			"error":   err.Error(),
+		})
+	}
 
 	host := "http://localhost:3000/"
 

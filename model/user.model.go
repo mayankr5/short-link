@@ -19,10 +19,10 @@ type User struct {
 type UserURL struct {
 	gorm.Model
 	ID          uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
-	OriginalURL string    `gorm:"unique" json:"original_url"`
-	ShortURL    string    `gorm:"unique" json:"short_url"`
+	OriginalURL string    `gorm:"uniqueIndex:idx_userid_originalurl" json:"original_url"`
+	ShortURL    string    `gorm:"uniqueIndex" json:"short_url"`
 	Visiter     int       `gorm:"default:0" json:"visiter"`
-	UserID      uuid.UUID `gorm:"not null" json:"user_id"`
+	UserID      uuid.UUID `gorm:"uniqueIndex:idx_userid_originalurl;not null" json:"user_id"`
 }
 
 type AuthToken struct {

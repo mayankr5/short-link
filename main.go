@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/mayankr5/url_shortner/routes"
@@ -10,7 +8,6 @@ import (
 )
 
 func main() {
-	fmt.Printf("hello")
 	app := fiber.New()
 
 	app.Use(cors.New())

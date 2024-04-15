@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/mayankr5/url_shortner/config"
 	"github.com/mayankr5/url_shortner/model"
 	"github.com/mayankr5/url_shortner/store"
 )
@@ -28,7 +29,7 @@ func insertToken(auth_token *model.AuthToken) error {
 
 func GenerateToken(user User) (string, error) {
 
-	s := user.ID.String() + user.Username + user.Email + time.Now().Format("2006-01-02 15:04:05")
+	s := user.ID.String() + user.Username + user.Email + time.Now().Format("2006-01-02 15:04:05") + config.Config("SECRET_KEY")
 	h := sha1.New()
 	h.Write([]byte(s))
 	tokenString := hex.EncodeToString(h.Sum(nil))

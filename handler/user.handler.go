@@ -129,7 +129,6 @@ func Login(c *fiber.Ctx) error {
 	})
 }
 
-// add check whether a username or email is present in database already
 func Signup(c *fiber.Ctx) error {
 
 	var user model.User

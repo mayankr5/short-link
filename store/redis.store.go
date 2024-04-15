@@ -16,9 +16,7 @@ var (
 	storeService = &StorageService{}
 )
 
-const CacheDuration = 6 * time.Hour
-
-func InitializeStore() *StorageService {
+func InitializeStore() (*StorageService, error) {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "",
@@ -27,20 +25,23 @@ func InitializeStore() *StorageService {
 
 	pong, err := redisClient.Ping().Result()
 	if err != nil {
-		panic(fmt.Sprintf("Error init Redis: %v", err))
+		fmt.Printf("Error init Redis: %v", err)
+		return nil, err
 	}
 
 	fmt.Printf("\nRedis started successfully: pong message = {%s} \n", pong)
 	storeService.redisClient = redisClient
-	return storeService
+	return storeService, err
 }
 
-func SaveUrlMapping(shortUrl string, originalUrl string, userId uuid.UUID) {
+func SaveUrlMapping(shortUrl string, originalUrl string, userId uuid.UUID, expirationDate time.Time) error {
+	CacheDuration := time.Until(expirationDate)
 	err := storeService.redisClient.Set(shortUrl, originalUrl, CacheDuration).Err()
 	if err != nil {
-		panic(fmt.Sprintf("Failed saving key url | Error: %v - shortUrl: %s - originalUrl: %s\n", err, shortUrl, originalUrl))
+		fmt.Printf("Failed saving key url | Error: %v - shortUrl: %s - originalUrl: %s\n", err, shortUrl, originalUrl)
+		return err
 	}
-
+	return nil
 }
 
 func RetrieveInitialUrl(shortUrl string) (string, error) {
