@@ -22,14 +22,14 @@ func getToken(accessToken string) (*model.AuthToken, error) {
 }
 
 func Authentication(c *fiber.Ctx) error {
-	accessToken := c.Cookies("accessToken")
+	accessToken := c.Cookies("access_token")
 
 	if accessToken == "" {
 		accessToken = c.Get("Authorization", "")
 		if accessToken != "" {
 			accessToken = strings.TrimPrefix(accessToken, "Bearer ")
 		} else {
-			return c.JSON(fiber.Map{
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"status":  "error",
 				"message": "missing token",
 				"error":   "token not found",

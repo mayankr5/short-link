@@ -14,7 +14,7 @@ import (
 )
 
 type LoginRequest struct {
-	Identity string `json:"Identity"`
+	Identity string `json:"identity"`
 	Password string `json:"password"`
 }
 
@@ -121,11 +121,14 @@ func Login(c *fiber.Ctx) error {
 			"error":   err.Error(),
 		})
 	}
-
+	c.Cookie(&fiber.Cookie{
+		Name:  "access_token",
+		Value: token,
+	})
 	return c.JSON(fiber.Map{
 		"status":  "success",
 		"message": "user login",
-		"data":    fiber.Map{"user": userRes, "token": token},
+		"data":    fiber.Map{"user": userRes},
 	})
 }
 
@@ -208,12 +211,16 @@ func Signup(c *fiber.Ctx) error {
 		})
 	}
 
+	c.Cookie(&fiber.Cookie{
+		Name:  "access_token",
+		Value: token,
+	})
+
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"status":  "success",
 		"message": "user registered",
 		"data": fiber.Map{
-			"user":  userRes,
-			"token": token,
+			"user": userRes,
 		},
 	})
 }
@@ -222,6 +229,7 @@ func Logout(c *fiber.Ctx) error {
 
 	auth_token := c.Locals("auth_token").(model.AuthToken)
 	store.DB.Db.Delete(&auth_token)
+	c.ClearCookie("access_token")
 
 	return c.JSON(fiber.Map{
 		"status":  "success",

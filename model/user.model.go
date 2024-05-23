@@ -31,3 +31,9 @@ type AuthToken struct {
 	Token  string    `gorm:"unique;not null" json:"token"`
 	UserID uuid.UUID `gorm:"not null" json:"user_id"`
 }
+
+// type Visitor struct {
+// 	gorm.Model
+// 	ID       uuid.UUID   `gorm:"type:uuid;primaryKey" json:"id"`
+// 	ClientIP pgtype.Inet `gorm:"type:inet;not null" json:"client_ip"`
+// }

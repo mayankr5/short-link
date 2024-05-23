@@ -5,11 +5,12 @@ go 1.21.4
 require (
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/itchyny/base58-go v0.2.1
-	golang.org/x/crypto v0.19.0
+	golang.org/x/crypto v0.20.0
 	gorm.io/gorm v1.25.9
 )
 
 require (
+	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/pgx/v5 v5.4.3 // indirect
@@ -23,6 +24,7 @@ require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/gofiber/fiber/v2 v2.52.4
 	github.com/google/uuid v1.6.0
+	github.com/jackc/pgtype v1.14.3
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/joho/godotenv v1.5.1
