@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/mayankr5/url_shortner/config"
 	"github.com/mayankr5/url_shortner/model"
 	"github.com/mayankr5/url_shortner/store"
 	"github.com/mayankr5/url_shortner/utils"
@@ -15,6 +16,10 @@ type UrlCreationRequest struct {
 	UserId         uuid.UUID `json:"user_id"`
 	ExpirationDate string    `json:"expiration_date"`
 }
+
+var (
+	host = config.Config("RAILWAY_PUBLIC_DOMAIN")
+)
 
 func CreateShortUrl(c *fiber.Ctx) error {
 	var creationRequest UrlCreationRequest
@@ -44,7 +49,9 @@ func CreateShortUrl(c *fiber.Ctx) error {
 		})
 	}
 
-	host := "http://localhost:3000/"
+	if host == "" {
+		host = "http://localhost:3000/"
+	}
 
 	userURL := model.UserURL{
 		ID:          uuid.New(),
@@ -111,8 +118,12 @@ func HandleShortUrlRedirect(c *fiber.Ctx) error {
 		})
 	}
 
+	if host == "" {
+		host = "http://localhost:3000/"
+	}
+
 	var userUrl model.UserURL
-	store.DB.Db.Where("short_url = ?", "http://localhost:3000/"+shortUrl).First(&userUrl)
+	store.DB.Db.Where("short_url = ?", host+shortUrl).First(&userUrl)
 
 	if userUrl.ShortURL == "" {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
