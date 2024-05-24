@@ -51,6 +51,8 @@ func CreateShortUrl(c *fiber.Ctx) error {
 
 	if host == "" {
 		host = "http://localhost:3000/"
+	} else {
+		host = "https://" + host + "/"
 	}
 
 	userURL := model.UserURL{
@@ -120,6 +122,8 @@ func HandleShortUrlRedirect(c *fiber.Ctx) error {
 
 	if host == "" {
 		host = "http://localhost:3000/"
+	} else {
+		host = "https://" + host + "/"
 	}
 
 	var userUrl model.UserURL
