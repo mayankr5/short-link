@@ -18,7 +18,7 @@ var (
 )
 
 func InitializeStore() (*StorageService, error) {
-	addr := config.Config("REDISHOST") + config.Config("REDISPORT")
+	addr := config.Config("REDISHOST") + ":" + config.Config("REDISPORT")
 
 	if addr == "" {
 		addr = "localhost:6379"
