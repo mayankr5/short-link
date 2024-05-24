@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/mayankr5/url_shortner/routes"
@@ -8,7 +10,11 @@ import (
 )
 
 func main() {
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		Network:      "tcp",
+		ServerHeader: "Fiber",
+		AppName:      "Short Link v1.0.1",
+	})
 
 	app.Use(cors.New())
 
@@ -19,5 +25,11 @@ func main() {
 	store.InitializeStore()
 	store.Connect()
 
-	app.Listen(":3000")
+	port := os.Getenv("PORT")
+
+	if port == "" {
+		port = "3000"
+	}
+
+	app.Listen("0.0.0.0:" + port)
 }

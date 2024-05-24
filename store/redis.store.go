@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-redis/redis"
 	"github.com/google/uuid"
+	"github.com/mayankr5/url_shortner/config"
 )
 
 type StorageService struct {
@@ -17,9 +18,17 @@ var (
 )
 
 func InitializeStore() (*StorageService, error) {
+	addr := config.Config("REDISHOST") + config.Config("REDISPORT")
+
+	if addr == "" {
+		addr = "localhost:6379"
+	}
+
+	pass := config.Config("REDISPASSWORD")
+
 	redisClient := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
+		Addr:     addr,
+		Password: pass,
 		DB:       0,
 	})
 

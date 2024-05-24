@@ -19,14 +19,14 @@ var DB Dbinstance
 
 func Connect() error {
 	var err error
-	p := config.Config("PSQL_DB_PORT")
+	p := config.Config("PGPORT")
 	port, err := strconv.ParseUint(p, 10, 32)
 
 	if err != nil {
 		return err
 	}
 
-	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", config.Config("PSQL_DB_HOST"), port, config.Config("PSQL_DB_USER"), config.Config("PSQL_DB_PASSWORD"), config.Config("PSQL_DB_NAME"))
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", config.Config("PGHOST"), port, config.Config("PGUSER"), config.Config("PGPASSWORD"), config.Config("POSTGRES_DB"))
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
