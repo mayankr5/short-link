@@ -17,10 +17,6 @@ type UrlCreationRequest struct {
 	ExpirationDate string    `json:"expiration_date"`
 }
 
-var (
-	host = config.Config("RAILWAY_PUBLIC_DOMAIN")
-)
-
 func CreateShortUrl(c *fiber.Ctx) error {
 	var creationRequest UrlCreationRequest
 	if err := c.BodyParser(&creationRequest); err != nil {
@@ -48,9 +44,9 @@ func CreateShortUrl(c *fiber.Ctx) error {
 			"error":   err.Error(),
 		})
 	}
-
+	host := config.Config("RAILWAY_PUBLIC_DOMAIN")
 	if host == "" {
-		host = "http://localhost:3000/"
+		host = "http://0.0.0.0:3000/"
 	} else {
 		host = "https://" + host + "/"
 	}
@@ -119,9 +115,9 @@ func HandleShortUrlRedirect(c *fiber.Ctx) error {
 			"error":   err.Error(),
 		})
 	}
-
+	host := config.Config("RAILWAY_PUBLIC_DOMAIN")
 	if host == "" {
-		host = "http://localhost:3000/"
+		host = "http://0.0.0.0:3000/"
 	} else {
 		host = "https://" + host + "/"
 	}
