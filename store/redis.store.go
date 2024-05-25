@@ -20,12 +20,16 @@ var (
 func InitializeStore() (*StorageService, error) {
 	addr := config.Config("REDISHOST") + ":" + config.Config("REDISPORT")
 
-	if addr == "" {
+	if addr == ":" {
 		addr = "localhost:6379"
 	}
 
 	pass := config.Config("REDISPASSWORD")
 
+	if pass == "" {
+		pass = ""
+	}
+	fmt.Println(addr, " ", pass)
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: pass,
