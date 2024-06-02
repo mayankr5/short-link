@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -23,6 +25,7 @@ type UserURL struct {
 	ShortURL    string    `gorm:"uniqueIndex" json:"short_url"`
 	Visiter     int       `gorm:"default:0" json:"visiter"`
 	UserID      uuid.UUID `gorm:"uniqueIndex:idx_userid_originalurl;not null" json:"user_id"`
+	Validity    time.Time `gorm:"not null" json:"validity"`
 }
 
 type AuthToken struct {

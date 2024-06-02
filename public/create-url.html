@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shortener URL - Short-Link</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <a href="index.html"><img src="images/logo.png" alt="logo" class="logo"></a>
+            <div class="dropdown">
+                <img src="images/profile.png" class="avatar dropbtn" onclick="myFunction()"> 
+                <div id="myDropdown" class="dropdown-content">
+                  <a href="dashboard.html">Profile</a>
+                  <a href="user-urls.html">My URLs</a>
+                  <a href="#">Change Password</a>
+                  <a href="#" id="logoutButton">Log out</a>
+                </div>
+            </div>
+        </nav>
+        <hr>
+        <div class="form-container">
+            <h2>Create Short URL</h2>
+            <form id="shortenForm" class="login-form">
+                <input type="url" id="longUrl" placeholder="Enter URL" required>
+                <div class="datetimepicker">
+                    <p>Expiry of URL</p>
+                    <input type="date" id="date" value="2018-07-03">
+                    <span></span>
+                    <input type="time" id="time" value="08:00">
+                </div>
+                <button type="submit" class="btn">Shorten</button>
+            </form>
+        </div>
+    </div>
+    <script src="js/urlManager.js"></script>
+</body>
+</html>

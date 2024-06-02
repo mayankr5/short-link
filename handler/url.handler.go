@@ -31,7 +31,7 @@ func CreateShortUrl(c *fiber.Ctx) error {
 	if err != nil {
 		c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "error",
-			"message": "Send Time in correct format",
+			"message": "incorrect time format",
 			"error":   err,
 		})
 	}
@@ -56,6 +56,7 @@ func CreateShortUrl(c *fiber.Ctx) error {
 		OriginalURL: creationRequest.OriginalURL,
 		ShortURL:    host + shortUrl,
 		UserID:      creationRequest.UserId,
+		Validity:    cacheDuration,
 	}
 
 	if err := store.DB.Db.Create(&userURL).Error; err != nil {
@@ -80,6 +81,8 @@ func GetURLs(c *fiber.Ctx) error {
 		OriginalURL string    `json:"original_url"`
 		ShortURL    string    `json:"short_url"`
 		Visiter     int       `json:"visiter"`
+		Created_at  time.Time `json:"created_at"`
+		Validity    time.Time `json:"validity"`
 	}
 	var userURLs []model.UserURL
 	var responseData []ResponseData
@@ -94,6 +97,8 @@ func GetURLs(c *fiber.Ctx) error {
 			OriginalURL: userURL.OriginalURL,
 			ShortURL:    userURL.ShortURL,
 			Visiter:     userURL.Visiter,
+			Created_at:  userURL.CreatedAt,
+			Validity:    userURL.Validity,
 		}
 		responseData = append(responseData, res)
 	}

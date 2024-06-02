@@ -13,12 +13,15 @@ func main() {
 	app := fiber.New(fiber.Config{
 		Network:      "tcp",
 		ServerHeader: "Fiber",
-		AppName:      "Short Link v1.0.1",
+		AppName:      "Short-Link v1.0.1",
 	})
 
 	app.Use(cors.New())
 
-	app.Static("/", "./public")
+	app.Static("/", "./public", fiber.Static{
+		CacheDuration: -1,
+		MaxAge:        0, // Set to 0 to prevent caching
+	})
 
 	routes.SetupRoutes(app)
 

@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (response.ok) {
             const res = await response.json();
             localStorage.setItem('userId', res.data.user.id);
-            window.location.href = 'urlManager.html';
+            window.location.href = 'create-url.html';
         } else {
             alert('Login failed');
         }

@@ -12,15 +12,21 @@ func SetupRoutes(app *fiber.App) {
 	api := app.Group("/api", logger.New())
 
 	// Authorisation APIs
-	user_api := api.Group("/auth")
-	user_api.Post("/login", handler.Login)
-	user_api.Post("/signup", handler.Signup)
+	auth := api.Group("/auth")
+	auth.Post("/login", handler.Login)
+	auth.Post("/signup", handler.Signup)
+
+	// Users APIs
+	users := api.Group("/users/:user_id", middleware.Authentication)
+	users.Get("/", handler.GetUser)
+	users.Put("/update", handler.UpdateUser)
+	users.Delete("/delete-account", handler.DeleteUser)
 
 	//Protected APIs
-	url_api := api.Group("/url", middleware.Authentication)
-	url_api.Post("/create-short-url", handler.CreateShortUrl)
-	url_api.Get("/get-urls", handler.GetURLs)
-	url_api.Get("/logout", handler.Logout)
+	urls := api.Group("/urls", middleware.Authentication)
+	urls.Post("/create-short-url", handler.CreateShortUrl)
+	urls.Get("/get-urls", handler.GetURLs)
+	urls.Get("/logout", handler.Logout)
 
 	// Public APIs
 	app.Get("/:shortUrl", handler.HandleShortUrlRedirect)

@@ -8,13 +8,24 @@
 </head>
 <body>
     <div class="container">
-        <h2>Login</h2>
-        <form id="loginForm">
-            <input type="text" id="loginUsername" placeholder="Username" required>
-            <input type="password" id="loginPassword" placeholder="Password" required>
-            <button type="submit">Login</button>
-        </form>
-        <a href="signup.html">Signup</a>
+        <nav>
+            <a href="index.html"><img src="images/logo.png" alt="logo" class="logo"></a>
+            <div>
+                <p>Don't have an account?</p>
+                <a href="signup.html">Register</a>
+            </div>
+        </nav>
+        <hr>
+        <div class="form-container anim">
+            <h2>Login</h2>
+            <form id="loginForm" class="login-form">
+                <input type="text" id="loginUsername" placeholder="Username or Email" required>
+                <input type="password" id="loginPassword" placeholder="Password" required>
+                <button type="submit" class="btn">Login</button>
+            </form>
+            <p>Don't have an account? </p>
+            <a href="signup.html">Signup</a>
+        </div>
     </div>
     <script src="js/login.js"></script>
 </body>

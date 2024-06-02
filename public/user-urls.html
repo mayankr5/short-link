@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User URLs - Short-Link</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <a href="index.html"><img src="images/logo.png" alt="logo" class="logo"></a>
+            <div class="dropdown">
+                <img src="images/profile.png" class="avatar dropbtn" onclick="myFunction()"> 
+                <div id="myDropdown" class="dropdown-content">
+                  <a href="dashboard.html">Profile</a>
+                  <a href="create-url.html">Create Url</a>
+                  <a href="#">Change Password</a>
+                  <a href="#" id="logoutButton">Log out</a>
+                </div>
+            </div>
+        </nav>
+        <hr>
+        <div class="url-contents">
+            <h2>Your URLs</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>S no.</th>
+                        <th>Short URL</th>
+                        <th>Original URL</th>
+                        <th>Visitors</th>
+                        <th>Created at</th>
+                        <th>Validity</th>
+                    </tr>
+                </thead>
+                <tbody id="urlList"></tbody>
+            </table>
+        </div>
+    </div>
+    <script src="js/getURLs.js"></script>
+</body>
+</html>
