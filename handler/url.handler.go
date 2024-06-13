@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -33,6 +34,14 @@ func CreateShortUrl(c *fiber.Ctx) error {
 			"status":  "error",
 			"message": "incorrect time format",
 			"error":   err,
+		})
+	}
+
+	if cacheDuration.Before(time.Now()) {
+		c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": "elapsed time",
+			"error":   errors.New("please provide future time from current time"),
 		})
 	}
 

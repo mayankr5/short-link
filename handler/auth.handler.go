@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"net/mail"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -201,21 +202,6 @@ func Signup(c *fiber.Ctx) error {
 		Email:    user.Email,
 	}
 
-	token, err := utils.GenerateToken(utils.User(userRes))
-
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"status":  "error",
-			"message": "error on token generation",
-			"error":   err.Error(),
-		})
-	}
-
-	c.Cookie(&fiber.Cookie{
-		Name:  "access_token",
-		Value: token,
-	})
-
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"status":  "success",
 		"message": "user registered",
@@ -229,7 +215,11 @@ func Logout(c *fiber.Ctx) error {
 
 	auth_token := c.Locals("auth_token").(model.AuthToken)
 	store.DB.Db.Delete(&auth_token)
-	c.ClearCookie("access_token")
+	cookie := new(fiber.Cookie)
+	cookie.Name = "access_token"
+	cookie.Expires = time.Now().Add(-time.Hour)
+	cookie.Value = ""
+	c.Cookie(cookie)
 
 	return c.JSON(fiber.Map{
 		"status":  "success",

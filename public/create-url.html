@@ -7,9 +7,10 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+    
     <div class="container">
         <nav>
-            <a href="index.html"><img src="images/logo.png" alt="logo" class="logo"></a>
+            <a id="nav-logo" href="index.html"><img src="images/logo.png" alt="logo" class="logo"></a>
             <div class="dropdown">
                 <img src="images/profile.png" class="avatar dropbtn" onclick="myFunction()"> 
                 <div id="myDropdown" class="dropdown-content">
@@ -34,7 +35,17 @@
                 <button type="submit" class="btn">Shorten</button>
             </form>
         </div>
+        <div id="modal" class="modal-box">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <p>Shortened Url</p>
+                <div class="shorturl-section" >
+                    <input type="text" name="short-url" id="short-url" readonly>
+                    <button class="copy-btn" id="copy">Copy</button>
+                </div>
+            </div>
+        </div>
     </div>
-    <script src="js/urlManager.js"></script>
+    <script src="js/createUrl.js"></script>
 </body>
 </html>

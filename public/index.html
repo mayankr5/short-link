@@ -25,5 +25,13 @@
             <a href="signup.html" class="get-started-btn btn">Get Started</a>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const userId = localStorage.getItem('userId')
+            if(userId){
+                window.location.href = 'create-url.html'
+            }
+        })
+    </script>
 </body>
 </html>
